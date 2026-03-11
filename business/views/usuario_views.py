@@ -9,6 +9,7 @@ import logging
 
 from business.repositories import usuario_repo, regra_repo
 from business.serializers import UsuarioSerializer, UsuarioDetailSerializer
+from business.models import Usuario
 from .base_view import BaseView
 
 logger = logging.getLogger(__name__)
@@ -18,10 +19,11 @@ class UsuarioViewSet(ViewSet, BaseView):
 
     def get_permissions(self):
         """Permissões baseadas na ação"""
-        if self.action in ['login', 'register', 'list_cdls', 'list_lojas_cdl']:
+        if self.action in ['login', 'create', 'list_cdls', 'list_lojas_cdl']:
             return []  # Público
         return [IsAuthenticated()]
 
+    # POST /login
     @action(detail=False, methods=['post'], permission_classes=[])
     def login(self, request):
         """Login de usuário"""
@@ -52,9 +54,9 @@ class UsuarioViewSet(ViewSet, BaseView):
             'refresh': str(refresh)
         })
 
-    @action(detail=False, methods=['post'], permission_classes=[])
-    def register(self, request):
-        """Registro de usuário"""
+    # POST /usuarios
+    def create(self, request):
+        """Registro de usuário - POST /usuarios"""
         try:
             with transaction.atomic():
                 data = request.data.copy()
@@ -75,6 +77,15 @@ class UsuarioViewSet(ViewSet, BaseView):
                 if usuario_repo.get_by_email(data['email']):
                     return self.error_response("Email já cadastrado")
 
+                # Para cliente, cliente_endereco é o campo usado (não endereco)
+                if data['role'] == 'cliente' and 'endereco' in data and 'cliente_endereco' not in data:
+                    data['cliente_endereco'] = data.pop('endereco')
+
+                # Para empresa/cdl, manter compatibilidade
+                if data['role'] in ['empresa', 'cdl'] and 'endereco' in data:
+                    # Mapear endereco para cliente_endereco temporariamente
+                    data['cliente_endereco'] = data.pop('endereco')
+
                 # Determinar cdl_id baseado no contexto
                 user = self.get_user(request) if request.user.is_authenticated else None
 
@@ -88,7 +99,6 @@ class UsuarioViewSet(ViewSet, BaseView):
                     return self.error_response("Empresa deve informar cdl_id ou ser criada por uma CDL")
 
                 # Definir status inicial
-                # data['status'] = 'pendente' if data['role'] in ['empresa', 'cdl'] else 'ativo'
                 data['status'] = 'ativo'
 
                 # Criar usuário
@@ -109,6 +119,7 @@ class UsuarioViewSet(ViewSet, BaseView):
             logger.error(f"Erro no registro: {str(e)}")
             return self.error_response("Erro interno ao cadastrar usuário")
 
+    # GET /usuarios
     def list(self, request):
         """Listar usuários baseado na role"""
         try:
@@ -125,6 +136,7 @@ class UsuarioViewSet(ViewSet, BaseView):
             logger.error(f"Erro ao listar usuários: {str(e)}")
             return self.error_response("Erro ao listar usuários")
 
+    # GET /usuarios/:id
     def retrieve(self, request, pk=None):
         """Buscar usuário por ID"""
         try:
@@ -141,7 +153,7 @@ class UsuarioViewSet(ViewSet, BaseView):
             logger.error(f"Erro ao buscar usuário: {str(e)}")
             return self.error_response("Erro ao buscar usuário")
 
-    @action(detail=True, methods=['patch', 'put'], url_path='perfil')
+    # PUT /usuarios/:id e PATCH /usuarios/:id/perfil
     def update_perfil(self, request, pk=None):
         """Atualizar perfil do usuário"""
         try:
@@ -183,6 +195,7 @@ class UsuarioViewSet(ViewSet, BaseView):
             logger.error(f"Erro ao atualizar perfil: {str(e)}")
             return self.error_response("Erro ao atualizar perfil")
 
+    # PATCH /usuarios/:id/foto
     @action(detail=True, methods=['patch'], url_path='foto')
     def update_foto(self, request, pk=None):
         """Atualizar foto de perfil"""
@@ -208,6 +221,7 @@ class UsuarioViewSet(ViewSet, BaseView):
             logger.error(f"Erro ao atualizar foto: {str(e)}")
             return self.error_response("Erro ao atualizar foto")
 
+    # PATCH /usuarios/:id/senha
     @action(detail=True, methods=['patch'], url_path='senha')
     def change_password(self, request, pk=None):
         """Alterar senha"""
@@ -237,6 +251,7 @@ class UsuarioViewSet(ViewSet, BaseView):
             logger.error(f"Erro ao alterar senha: {str(e)}")
             return self.error_response("Erro ao alterar senha")
 
+    # GET /cdls (público)
     @action(detail=False, methods=['get'], permission_classes=[])
     def list_cdls(self, request):
         """Listar CDLs ativas"""
@@ -257,6 +272,7 @@ class UsuarioViewSet(ViewSet, BaseView):
             logger.error(f"Erro ao listar CDLs: {str(e)}")
             return self.error_response("Erro ao listar CDLs")
 
+    # GET /cdls/:cdl_id/lojas (público)
     @action(detail=False, methods=['get'], url_path='cdls/(?P<cdl_id>[^/.]+)/lojas', permission_classes=[])
     def list_lojas_cdl(self, request, cdl_id=None):
         """Listar lojas de uma CDL"""
@@ -276,6 +292,7 @@ class UsuarioViewSet(ViewSet, BaseView):
             logger.error(f"Erro ao listar lojas: {str(e)}")
             return self.error_response("Erro ao listar lojas")
 
+    # GET /minha-cdl/dashboard
     @action(detail=False, methods=['get'], url_path='dashboard/cdl')
     def dashboard_cdl(self, request):
         """Dashboard da CDL"""
@@ -314,6 +331,7 @@ class UsuarioViewSet(ViewSet, BaseView):
             logger.error(f"Erro no dashboard CDL: {str(e)}")
             return self.error_response("Erro ao carregar dashboard")
 
+    # PUT /cliente/:id/trocar-cdl
     @action(detail=True, methods=['put'], url_path='trocar-cdl')
     def trocar_cdl(self, request, pk=None):
         """Cliente trocar de CDL"""
@@ -349,6 +367,7 @@ class UsuarioViewSet(ViewSet, BaseView):
             logger.error(f"Erro ao trocar CDL: {str(e)}")
             return self.error_response("Erro ao trocar CDL")
 
+    # GET /empresas
     @action(detail=False, methods=['get'], url_path='empresas')
     def list_empresas(self, request):
         """Listar empresas ativas"""
@@ -376,17 +395,63 @@ class UsuarioViewSet(ViewSet, BaseView):
             logger.error(f"Erro ao listar empresas: {str(e)}")
             return self.error_response("Erro ao listar empresas")
 
-    # Ações administrativas
-    @action(detail=True, methods=['post'], url_path='tornar-admin')
-    def tornar_admin(self, request, pk=None):
-        """Tornar usuário admin"""
+    # PUT /minha-empresa
+    @action(detail=False, methods=['put'], url_path='minha-empresa')
+    def atualizar_dados_empresa(self, request):
+        """Atualizar dados da empresa logada"""
+        try:
+            if request.user.role != 'empresa':
+                return self.forbidden_response("Apenas empresas podem atualizar dados comerciais")
+
+            usuario = usuario_repo.atualizar_dados_empresa(request.user.usuario_id, request.data)
+
+            serializer = UsuarioSerializer(usuario)
+            data = serializer.data
+            data.pop('password', None)
+
+            return self.success_response(data, "Dados da empresa atualizados com sucesso")
+
+        except ValueError as e:
+            return self.error_response(str(e))
+        except Exception as e:
+            logger.error(f"Erro ao atualizar dados da empresa: {str(e)}")
+            return self.error_response("Erro ao atualizar dados da empresa")
+
+    # ==================== ROTAS ADMINISTRATIVAS ====================
+
+    # GET /admin/usuarios
+    @action(detail=False, methods=['get'], url_path='admin/usuarios')
+    def visualizar_usuario(self, request):
+        """Listar todos os usuários (admin only)"""
         if request.user.role != 'admin':
             return self.forbidden_response()
 
         try:
-            usuario = usuario_repo.get_by_id(pk)
+            usuarios = Usuario.objects.all()
+            serializer = UsuarioSerializer(usuarios, many=True)
+            data = serializer.data
+            for item in data:
+                item.pop('password', None)
+            return Response(data)
+        except Exception as e:
+            logger.error(f"Erro ao listar usuários: {str(e)}")
+            return self.error_response("Erro ao listar usuários")
+
+    # PUT /admin/tornar-admin
+    @action(detail=False, methods=['put'], url_path='admin/tornar-admin')
+    def tornar_admin(self, request):
+        """Tornar usuário admin"""
+        if request.user.role != 'admin':
+            return self.forbidden_response()
+
+        user_id = request.data.get('id')
+        if not user_id:
+            return self.error_response("ID do usuário é obrigatório")
+
+        try:
+            usuario = usuario_repo.get_by_id(user_id)
             if not usuario:
-                return self.not_found_response()
+                return self.not_found_response("Usuário não encontrado")
 
             usuario.role = 'admin'
             usuario.status = 'ativo'
@@ -396,22 +461,27 @@ class UsuarioViewSet(ViewSet, BaseView):
             data = serializer.data
             data.pop('password', None)
 
-            return self.success_response(data, f"Usuário {pk} agora é admin")
+            return self.success_response(data, f"Usuário {user_id} agora é admin")
 
         except Exception as e:
             logger.error(f"Erro ao tornar admin: {str(e)}")
             return self.error_response("Erro ao promover usuário")
 
-    @action(detail=True, methods=['post'], url_path='tornar-cdl')
-    def tornar_cdl(self, request, pk=None):
+    # PUT /admin/tornar-cdl
+    @action(detail=False, methods=['put'], url_path='admin/tornar-cdl')
+    def tornar_cdl(self, request):
         """Tornar usuário CDL"""
         if request.user.role != 'admin':
             return self.forbidden_response()
 
+        user_id = request.data.get('id')
+        if not user_id:
+            return self.error_response("ID do usuário é obrigatório")
+
         try:
-            usuario = usuario_repo.get_by_id(pk)
+            usuario = usuario_repo.get_by_id(user_id)
             if not usuario:
-                return self.not_found_response()
+                return self.not_found_response("Usuário não encontrado")
 
             usuario.role = 'cdl'
             usuario.status = 'pendente'
@@ -421,13 +491,14 @@ class UsuarioViewSet(ViewSet, BaseView):
             data = serializer.data
             data.pop('password', None)
 
-            return self.success_response(data, f"Usuário {pk} agora é CDL (pendente aprovação)")
+            return self.success_response(data, f"Usuário {user_id} agora é CDL (pendente aprovação)")
 
         except Exception as e:
             logger.error(f"Erro ao tornar CDL: {str(e)}")
             return self.error_response("Erro ao promover usuário")
 
-    @action(detail=True, methods=['post'], url_path='aprovar-cdl')
+    # PUT /admin/aprovar-cdl/:id
+    @action(detail=True, methods=['put'], url_path='admin/aprovar-cdl')
     def aprovar_cdl(self, request, pk=None):
         """Aprovar CDL"""
         if request.user.role != 'admin':
@@ -454,7 +525,8 @@ class UsuarioViewSet(ViewSet, BaseView):
             logger.error(f"Erro ao aprovar CDL: {str(e)}")
             return self.error_response("Erro ao aprovar CDL")
 
-    @action(detail=True, methods=['post'], url_path='pontos')
+    # PUT /admin/usuarios/pontos/:id
+    @action(detail=True, methods=['put'], url_path='admin/usuarios/pontos')
     def give_points(self, request, pk=None):
         """Adicionar pontos (admin only)"""
         if request.user.role != 'admin':
@@ -479,6 +551,7 @@ class UsuarioViewSet(ViewSet, BaseView):
             logger.error(f"Erro ao adicionar pontos: {str(e)}")
             return self.error_response("Erro ao adicionar pontos")
 
+    # DELETE /usuarios/:id
     def destroy(self, request, pk=None):
         """Deletar usuário (admin only)"""
         if request.user.role != 'admin':
@@ -491,7 +564,7 @@ class UsuarioViewSet(ViewSet, BaseView):
 
             # Deletar foto do S3
             if usuario.foto_perfil:
-                from business import image_upload_service
+                from business.services.image_upload import image_upload_service
                 image_upload_service.delete_from_s3(usuario.foto_perfil)
 
             usuario.delete()
