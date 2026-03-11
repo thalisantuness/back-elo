@@ -41,43 +41,37 @@ class CompraRepository(BaseRepository):
 
     @transaction.atomic
     def criar_compra_pendente(self, empresa_id, valor, campanha_id=None):
-        """Cria compra pendente e gera dados do QR Code"""
 
-        # Verificar empresa
+
+
         empresa = Usuario.objects.filter(
             usuario_id=empresa_id,
-            role__in=['empresa', 'cdl', 'admin'],
-            status='ativo'
+        role__in=['empresa', 'cdl', 'admin'],
+        status='ativo'
         ).first()
 
         if not empresa:
             raise ValueError('Empresa não encontrada ou inativa')
 
-        # Calcular pontos (1 por real)
         pontos = int(float(valor))
 
-        # Criar compra
-        compra = Compra.objects.create(
-            empresa_id=empresa_id,
-            valor=valor,
-            pontos_adquiridos=pontos,
-            campanha_id=campanha_id,
-            status='pendente'
-        )
-
-        # Gerar dados do QR Code
         qr_data = qr_code_service.generate_qr_data(
-            compra_id=compra.compra_id,
+            compra_id=None,
             empresa_id=empresa_id,
             valor=valor,
             campanha_id=campanha_id
         )
 
-        compra.qr_code_id = qr_data['qr_code_id']
-        compra.qr_code_data = qr_data
-        compra.qr_code_expira_em = datetime.fromtimestamp(qr_data['expiresAt'])
-        compra.save()
-
+        compra = Compra.objects.create(
+            empresa_id=empresa_id,
+            valor=valor,
+            pontos_adquiridos=pontos,
+            campanha_id=campanha_id,
+            status='pendente',
+            qr_code_id=qr_data['qr_code_id'],
+            qr_code_data=qr_data,
+            qr_code_expira_em=datetime.fromtimestamp(qr_data['expiresAt'])
+        )
         return compra
 
     @transaction.atomic
