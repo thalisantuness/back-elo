@@ -119,6 +119,8 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'usuario_id',
+    'USER_ID_CLAIM': 'user_id', 
 }
 
 # CORS
@@ -131,7 +133,8 @@ AWS_REGION = config('AWS_REGION')
 AWS_BUCKET_NAME = config('AWS_BUCKET_NAME')
 
 # QR Code Secret
-QR_CODE_SECRET = config('QR_CODE_SECRET')
+# QR Code Secret com valor padrão
+QR_CODE_SECRET = config('QR_CODE_SECRET', default='sua-chave-secreta-qrcode-aqui')
 
 # Channels
 ASGI_APPLICATION = 'app.asgi.application'
