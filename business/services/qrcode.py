@@ -79,9 +79,29 @@ class QRCodeService:
             else:
                 dados = qr_code_data
 
+            # Alguns clientes podem enviar o objeto inteiro da resposta de /qr-code
+            if isinstance(dados, dict) and 'qr_code_data' in dados and isinstance(dados.get('qr_code_data'), dict):
+                dados = dados['qr_code_data']
+
             assinatura = dados.pop('assinatura', None)
             if not assinatura:
                 return {'valid': False, 'error': 'Assinatura não encontrada'}
+
+            # Normalizar tipos para evitar mismatch de assinatura entre clientes
+            # (ex.: 22 vs 22.0, timestamps como string).
+            for numeric_key in ('valor', 'timestamp', 'expiresAt'):
+                if numeric_key in dados and dados[numeric_key] is not None:
+                    try:
+                        dados[numeric_key] = float(dados[numeric_key])
+                    except (ValueError, TypeError):
+                        return {'valid': False, 'error': f'Campo numérico inválido: {numeric_key}'}
+
+            for int_key in ('empresa_id', 'compra_id', 'campanha_id'):
+                if int_key in dados and dados[int_key] is not None:
+                    try:
+                        dados[int_key] = int(dados[int_key])
+                    except (ValueError, TypeError):
+                        return {'valid': False, 'error': f'Campo inteiro inválido: {int_key}'}
 
             assinatura_esperada = self.generate_signature(dados)
 
