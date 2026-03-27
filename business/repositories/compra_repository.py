@@ -2,8 +2,9 @@ from django.db import transaction, models
 from django.db.models import Q, Count, Sum, Avg
 from datetime import datetime, timedelta
 from business.models import Compra, Usuario, SolicitacaoRecompensa, Recompensa
-from business.services.qrcode import qr_code_service
 from .base_repository import BaseRepository
+from django.utils import timezone
+from business.services.qrcode import qr_code_service
 
 
 class CompraRepository(BaseRepository):
@@ -70,7 +71,7 @@ class CompraRepository(BaseRepository):
             status='pendente',
             qr_code_id=qr_data['qr_code_id'],
             qr_code_data=qr_data,
-            qr_code_expira_em=datetime.fromtimestamp(qr_data['expiresAt'])
+            qr_code_expira_em=timezone.make_aware(datetime.fromtimestamp(qr_data['expiresAt']))
         )
         return compra
 
@@ -111,7 +112,7 @@ class CompraRepository(BaseRepository):
         # Processar claim
         compra.cliente = cliente
         compra.status = 'validada'
-        compra.validado_em = datetime.now()
+        compra.validado_em = timezone.now()
         compra.validado_por = cliente
         compra.save()
 
@@ -222,7 +223,7 @@ class CompraRepository(BaseRepository):
             pontos_usados = 0
 
         # Empresas ativas na semana
-        sete_dias_atras = datetime.now() - timedelta(days=7)
+        sete_dias_atras = timezone.now() - timedelta(days=7)
         empresas_ativas = Compra.objects.filter(
             compra_validada_where & Q(validado_em__gte=sete_dias_atras)
         ).values('empresa_id').distinct().count()

@@ -102,6 +102,10 @@ class UsuarioViewSet(ViewSet, BaseView):
                 # Definir status inicial
                 data['status'] = 'ativo'
 
+                # Mapeia cdl_id para cdl para o DRF ModelSerializer
+                if 'cdl_id' in data:
+                    data['cdl'] = data.pop('cdl_id')
+
                 # Criar usuário
                 usuario = usuario_repo.create_usuario(data, foto_base64)
 

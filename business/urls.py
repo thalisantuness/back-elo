@@ -138,6 +138,8 @@ urlpatterns = [
     
     path('qr-code/', CompraViewSet.as_view({'post': 'gerar_qrcode'}), name='gerar-qrcode'),
     path('compra/', CompraViewSet.as_view({'post': 'claim_compra'}), name='claim-compra'),
+    # Accept POST without trailing slash (needed for clients that omit the slash)
+    path('compra', CompraViewSet.as_view({'post': 'claim_compra'}), name='claim-compra-no-slash'),
     path('minhas-estatisticas/', CompraViewSet.as_view({'get': 'estatisticas'}), name='estatisticas'),
     path('big-numbers/', CompraViewSet.as_view({'get': 'big_numbers'}), name='big-numbers'),
     
