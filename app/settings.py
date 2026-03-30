@@ -5,13 +5,10 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-kt@4j3(6s5fu-na0jmc!0#s920!9y_36a(58ew*s0-v1f7v=%c'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
+# Environment variables
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-kt@4j3(6s5fu-na0jmc!0#s920!9y_36a(58ew*s0-v1f7v=%c')
+DEBUG = config('DEBUG', default=False, cast=bool)
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
 
 # Application definition
 INSTALLED_APPS = [
@@ -67,7 +64,7 @@ DATABASES = {
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
+        'PORT': config('DB_PORT', default=5432, cast=int),
     }
 }
 
@@ -127,10 +124,10 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = True
 
 # AWS Settings
-AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
-AWS_REGION = config('AWS_REGION')
-AWS_BUCKET_NAME = config('AWS_BUCKET_NAME')
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default=None)
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default=None)
+AWS_REGION = config('AWS_REGION', default=None)
+AWS_BUCKET_NAME = config('AWS_BUCKET_NAME', default=None)
 
 # QR Code Secret
 # QR Code Secret com valor padrão
