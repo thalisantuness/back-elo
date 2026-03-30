@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 import logging
 
@@ -100,6 +101,10 @@ class UsuarioViewSet(ViewSet, BaseView):
 
                 # Definir status inicial
                 data['status'] = 'ativo'
+
+                # Mapeia cdl_id para cdl para o DRF ModelSerializer
+                if 'cdl_id' in data:
+                    data['cdl'] = data.pop('cdl_id')
 
                 # Criar usuário
                 usuario = usuario_repo.create_usuario(data, foto_base64)
