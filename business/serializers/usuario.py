@@ -55,7 +55,7 @@ class UsuarioDetailSerializer(UsuarioSerializer):
 
     def get_regra_info(self, obj):
         try:
-            regra = Regra.objects.get(usuario=obj, ativa=True)
+            regra = Regra.objects.get(usuarios=obj, ativa=True)
             return RegraSerializer(regra).data
         except Regra.DoesNotExist:
             return None
