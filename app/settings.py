@@ -132,7 +132,11 @@ AWS_BUCKET_NAME = config('AWS_BUCKET_NAME', default=None)
 # QR Code Secret
 # QR Code Secret com valor padrão
 QR_CODE_SECRET = config('QR_CODE_SECRET', default='sua-chave-secreta-qrcode-aqui')
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Channels
 ASGI_APPLICATION = 'app.asgi.application'
 
