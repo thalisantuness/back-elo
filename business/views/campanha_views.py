@@ -199,7 +199,7 @@ class CampanhaViewSet(ViewSet, BaseView):
 
             # Deletar imagem do S3
             if campanha.imagem_url:
-                from business import image_upload_service
+                from business.services.image_upload import image_upload_service
                 image_upload_service.delete_from_s3(campanha.imagem_url)
 
             campanha.delete()

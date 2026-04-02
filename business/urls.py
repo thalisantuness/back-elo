@@ -144,9 +144,9 @@ urlpatterns = [
     path('big-numbers/', CompraViewSet.as_view({'get': 'big_numbers'}), name='big-numbers'),
     
     # ==================== ROTAS DE CHAT ====================
-    path('conversas/', ConversaViewSet.as_view({'get': 'list'}), name='conversas'),
-    path('conversas/<int:pk>/mensagens/', ConversaViewSet.as_view({'get': 'mensagens'}), name='conversa-mensagens'),
-    path('mensagens/<int:pk>/lida/', ConversaViewSet.as_view({'put': 'marcar_lida'}), name='mensagem-lida'),
+    # path('conversas/', ConversaViewSet.as_view({'get': 'list'}), name='conversas'),
+    # path('conversas/<int:pk>/mensagens/', ConversaViewSet.as_view({'get': 'mensagens'}), name='conversa-mensagens'),
+    # path('mensagens/<int:pk>/lida/', ConversaViewSet.as_view({'put': 'marcar_lida'}), name='mensagem-lida'),
     
     # Refresh token
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

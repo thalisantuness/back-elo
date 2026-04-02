@@ -10,13 +10,15 @@ from django.urls import path
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
 
-from business import ChatConsumer
+# from business.consumers import ChatConsumer
 
-application = ProtocolTypeRouter({
-    'http': get_asgi_application(),
-    'websocket': AuthMiddlewareStack(
-        URLRouter([
-            path('ws/chat/', ChatConsumer.as_asgi()),
-        ])
-    ),
-})
+application = get_asgi_application()
+
+# application = ProtocolTypeRouter({
+#     'http': get_asgi_application(),
+#     'websocket': AuthMiddlewareStack(
+#         URLRouter([
+#             path('ws/chat/', ChatConsumer.as_asgi()),
+#         ])
+#     ),
+# })

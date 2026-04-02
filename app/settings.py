@@ -21,7 +21,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
-    'channels',
+    # 'channels',
     'business',
 ]
 
@@ -65,6 +65,9 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST'),
         'PORT': config('DB_PORT', default=5432, cast=int),
+        'OPTIONS': {
+            'sslmode': config('DB_SSLMODE', default='disable'),
+        },
     }
 }
 

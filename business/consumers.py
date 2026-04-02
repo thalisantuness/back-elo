@@ -4,8 +4,8 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import AccessToken
-from business import Conversa, Mensagem, Usuario
-from business import usuario_repo
+from business.models import Conversa, Mensagem, Usuario
+from business.repositories import usuario_repo
 
 User = get_user_model()
 logger = logging.getLogger(__name__)

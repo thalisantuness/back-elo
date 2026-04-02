@@ -134,7 +134,7 @@ class ProdutoViewSet(ViewSet, BaseView):
             # Processar nova foto principal se fornecida
             nova_foto = data.pop('foto_principal', None) or data.pop('imagem_base64', None)
             if nova_foto:
-                from business import image_upload_service
+                from business.services.image_upload import image_upload_service
 
                 # Deletar foto antiga
                 if produto.foto_principal:
