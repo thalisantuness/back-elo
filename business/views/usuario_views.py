@@ -171,12 +171,17 @@ class UsuarioViewSet(ViewSet, BaseView):
                 return self.not_found_response()
 
             # Campos permitidos
-            allowed_fields = ['nome', 'telefone', 'cliente_endereco', 'cidade', 'estado']
+            allowed_fields = ['nome', 'telefone', 'cliente_endereco', 'cidade', 'estado', 'email']
             update_data = {}
 
             for field in allowed_fields:
                 if field in request.data:
                     update_data[field] = request.data[field]
+
+            # Verificar email duplicado
+            if 'email' in update_data and update_data['email'] != usuario.email:
+                if usuario_repo.get_by_email(update_data['email']):
+                    return self.error_response("Este e-mail já está em uso por outro usuário")
 
             # Validar telefone
             if 'telefone' in update_data:
